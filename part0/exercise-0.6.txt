@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant browser
+    participant server
+
+    Note right of browser: The user complete the form writing some text and hits the save button.
+    Note right of browser: main.js: The browser saves the note locally and redraw the page with the new note added.
+    Note right of browser: The browser sends the note to the server to save it.
+    browser->>server: POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+    activate server
+    Note left of server: The server saves the new note.
+    server-->>browser: Response 201 Created -  {"message":"note created"}
+    deactivate server
+    Note right of browser: main.js: The browser gets the 201 status and logs into console the Response.
