@@ -2,7 +2,12 @@ import { useState } from 'react'
 const Title = ({text}) => <h1>{text}</h1>
 
 const Statistics = ({good, neutral, bad}) => {
-  if((good+neutral+bad)==0){
+  
+  const total= (good+neutral+bad)
+  const average = ((good+(bad*-1))/(good+neutral+bad))
+  const positives = ((good*100)/(good+neutral+bad))+'%'
+
+  if(total==0){
     return (
       <>
       <Title text='Statistics'/><br/>
@@ -13,25 +18,19 @@ const Statistics = ({good, neutral, bad}) => {
   return (
   <>
       <Title text='Statistics'/><br/>
-      <Show item={good} text='Good: '/>
-      <Show item={neutral} text='Neutral: '/>
-      <Show item={bad} text='Bad: '/>
-      <Sum item1={good} item2={neutral} item3={bad} text='All:'/>
-      <Avg item1={good} item2={neutral} item3={bad} text='Average:'/>
-      <Pos item1={good} item2={neutral} item3={bad} text='Positive:'/>
+      <StatisticLine item={good} text='Good:'/>
+      <StatisticLine item={neutral} text='Neutral:'/>
+      <StatisticLine item={bad} text='Bad:'/>
+      <StatisticLine item={total} text='All:'/>
+      <StatisticLine item={average} text='Average:'/>
+      <StatisticLine item={positives} text='Positive:'/>
   </>
       )
 }
 
 const Button = ({ handleClick, text }) => <button onClick={handleClick}>{text}</button>
 
-const Show =  ({item, text}) => <div>{text} {item}</div>
-
-const Sum =  ({item1, item2, item3,  text}) => <div>{text} {item1+item2+item3}</div>
-
-const Avg =  ({item1, item2, item3,  text}) => <div>{text} {(item1+(item3*-1))/(item1+item2+item3)}</div>
-
-const Pos = ({item1, item2, item3,  text}) => <div>{text} {(item1*100)/(item1+item2+item3)}%</div>
+const StatisticLine =  ({item, text}) => <div>{text} {item}</div>
 
 
 const App = () => {
