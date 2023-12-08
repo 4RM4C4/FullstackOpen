@@ -1,7 +1,16 @@
 import { useState } from 'react'
 const Title = ({text}) => <h1>{text}</h1>
 
-const Statistics = ({good, neutral, bad}) => (
+const Statistics = ({good, neutral, bad}) => {
+  if((good+neutral+bad)==0){
+    return (
+      <>
+      <Title text='Statistics'/><br/>
+      <div>No feedback given.</div>
+      </>
+    )
+  }
+  return (
   <>
       <Title text='Statistics'/><br/>
       <Show item={good} text='Good: '/>
@@ -12,6 +21,7 @@ const Statistics = ({good, neutral, bad}) => (
       <Pos item1={good} item2={neutral} item3={bad} text='Positive:'/>
   </>
       )
+}
 
 const Button = ({ handleClick, text }) => <button onClick={handleClick}>{text}</button>
 
@@ -19,19 +29,10 @@ const Show =  ({item, text}) => <div>{text} {item}</div>
 
 const Sum =  ({item1, item2, item3,  text}) => <div>{text} {item1+item2+item3}</div>
 
-const Avg =  ({item1, item2, item3,  text}) => {
-  if((item1+item2+item3)==0) {
-    return <div>{text} There is not enough data to calculate.</div>
-  }
-  return <div>{text} {(item1+(item3*-1))/(item1+item2+item3)}</div>
-}
+const Avg =  ({item1, item2, item3,  text}) => <div>{text} {(item1+(item3*-1))/(item1+item2+item3)}</div>
 
-const Pos = ({item1, item2, item3,  text}) => {
-  if((item1+item2+item3)==0) {
-    return <div>{text} There is not enough data to calculate.</div>
-  }
-return <div>{text} {(item1*100)/(item1+item2+item3)}%</div>
-}
+const Pos = ({item1, item2, item3,  text}) => <div>{text} {(item1*100)/(item1+item2+item3)}%</div>
+
 
 const App = () => {
   const [good, setGood] = useState(0)
