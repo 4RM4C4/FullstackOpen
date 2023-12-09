@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const Button = ({handleClick, text }) => <button onClick={handleClick}>{text}</button>
+const Button = ({ handleClick, text }) => <button onClick={handleClick}>{text}</button>
 
 const App = () => {
   const anecdotes = [
@@ -13,6 +13,7 @@ const App = () => {
     'Programming without an extremely heavy use of console.log is same as if a doctor would refuse to use x-rays or blood tests when diagnosing patients.',
     'The only way to go fast, is to go well.'
   ]
+
   const [allAnecdotes, setAll] = useState(Array(anecdotes.length).fill(0))
   const [selected, setSelected] = useState(0)
 
@@ -22,12 +23,18 @@ const App = () => {
     setAll(copyAnecdotes)
   }
 
+  const maxAnecdote = allAnecdotes.reduce((max, current) => { if (current > max) { return current } return max }, 0)
+
   return (
     <div>
+      <h1>Anecdote of the day</h1>
       {anecdotes[selected]}
-      <br/>
-      <Button handleClick={() => ClickVote()} text='vote'/>
-      <Button handleClick={() => setSelected(Math.floor(Math.random()*anecdotes.length))} text='next anecdote'/>
+      <br />
+      <Button handleClick={() => ClickVote()} text='vote' />
+      <Button handleClick={() => setSelected(Math.floor(Math.random() * anecdotes.length))} text='next anecdote' />
+      <br />
+      <h1>Anecdote with most votes</h1>
+      {anecdotes[allAnecdotes.indexOf(maxAnecdote)]}
     </div>
   )
 }
