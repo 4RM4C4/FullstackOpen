@@ -3,7 +3,7 @@ import Country from './Country'
 import TenCountry from './TenCountry'
 import OneCountry from './OneCountry'
 
-const Countries = ({countries, filter, action}) => {
+const Countries = ({countries, filter, action, api_key, weather, setWeather}) => {
     let filteredCountries = countries.filter((country) => country.name.common.toLowerCase().includes(filter.toLowerCase()))
     if(filteredCountries.filter((country) => country.name.common.length === filter.length).length == 1){
         filteredCountries = filteredCountries.filter((country) => country.name.common.length === filter.length)
@@ -17,7 +17,7 @@ const Countries = ({countries, filter, action}) => {
     } else if (filteredCountries.length != 1) {
         return <table><tbody>{filteredCountries.map((country) => <TenCountry key={country.name.common} country={country} action={action}/>)}</tbody></table>
     } else {
-        return <>{filteredCountries.map((country) => <OneCountry key={country.name.common} country={country}/>)}</>
+        return <>{filteredCountries.map((country) => <OneCountry key={country.name.common} country={country} api_key={api_key} weather={weather} setWeather={setWeather}/>)}</>
     }
 }
 
