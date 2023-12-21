@@ -37,7 +37,7 @@ const App = () => {
       name: newName,
       number: newNumber,
     }
-    if(persons.some(p => p.name === personObject.name)){
+    if (persons.some(p => p.name === personObject.name)) {
       alert(`${newName} is already added to phonebook`)
     } else {
       personsService
@@ -51,14 +51,28 @@ const App = () => {
     }
   }
 
+  const deleteName = (personToDelete) => {
+    if(window.confirm(`Delete ${personToDelete.name}?`)){
+      personsService
+      .borrar(personToDelete.id)
+      .then(
+        setPersons(persons.filter(person => person.id !== personToDelete.id))
+      )
+    }
+  }
+
   return (
     <div>
       <h2>Phonebook</h2>
-      <Filter value={filter} action={handleFilterChange}/>
+      <Filter value={filter} action={handleFilterChange} />
       <h3>Add a new</h3>
-      <PersonForm formAction={addName} name={newName} nameChange={handleNameChange} number={newNumber} numberChange={handleNumberChange} /> 
+      <PersonForm formAction={addName} name={newName} nameChange={handleNameChange} number={newNumber} numberChange={handleNumberChange} />
       <h3>Numbers</h3>
-      <Persons persons={persons} filter={filter}/>
+      <table>
+        <tbody>
+          <Persons persons={persons} filter={filter} action={deleteName} />
+        </tbody>
+      </table>
     </div>
   )
 }
