@@ -3,7 +3,6 @@ import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
 import personsService from './services/persons.js'
-import axios from 'axios'
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -38,7 +37,24 @@ const App = () => {
       number: newNumber,
     }
     if (persons.some(p => p.name === personObject.name)) {
-      alert(`${newName} is already added to phonebook`)
+      if(persons.some(p => p.number === personObject.number)){
+        alert(`${newName} with number ${newNumber} is already added to phonebook.`)
+        setNewName('')
+        setNewNumber('')
+        setFilter('')
+      } else {
+        if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
+          const personId = persons.filter(p => p.name == personObject.name)[0].id
+          personsService
+            .update(personId, personObject)
+            .then(response => {
+              setPersons(persons.map(person => person.id !== response.id ? person : response))
+              setNewName('')
+              setNewNumber('')
+              setFilter('')
+            })
+        }
+      }
     } else {
       personsService
         .create(personObject)
