@@ -3,12 +3,15 @@ import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
 import personsService from './services/persons.js'
+import Notification from './components/Notification'
+import './index.css'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     personsService
@@ -52,6 +55,10 @@ const App = () => {
               setNewName('')
               setNewNumber('')
               setFilter('')
+              setErrorMessage(`Updated ${response.name} with number ${response.number}`)
+              setTimeout(() => {
+                setErrorMessage(null)
+              }, 5000)
             })
         }
       }
@@ -63,6 +70,10 @@ const App = () => {
           setNewName('')
           setNewNumber('')
           setFilter('')
+          setErrorMessage(`Added ${response.name}`)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
         })
     }
   }
@@ -80,6 +91,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={errorMessage} />
       <Filter value={filter} action={handleFilterChange} />
       <h3>Add a new</h3>
       <PersonForm formAction={addName} name={newName} nameChange={handleNameChange} number={newNumber} numberChange={handleNumberChange} />
