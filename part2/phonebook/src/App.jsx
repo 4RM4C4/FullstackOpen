@@ -19,6 +19,13 @@ const App = () => {
       .then(response => {
         setPersons(response)
       })
+      .catch(error =>{
+        const ErrorMessageObject = {
+          message: `Could not retrieve information from the database.`,
+          status: "nok",
+        }
+        setErrorMessage(ErrorMessageObject)
+      })
   }, [])
 
   const handleNameChange = (event) => {
@@ -55,7 +62,11 @@ const App = () => {
               setNewName('')
               setNewNumber('')
               setFilter('')
-              setErrorMessage(`Updated ${response.name} with number ${response.number}`)
+              const ErrorMessageObject = {
+                message: `Updated ${response.name} with number ${response.number}`,
+                status: "ok",
+              }
+              setErrorMessage(ErrorMessageObject)
               setTimeout(() => {
                 setErrorMessage(null)
               }, 5000)
@@ -70,7 +81,11 @@ const App = () => {
           setNewName('')
           setNewNumber('')
           setFilter('')
-          setErrorMessage(`Added ${response.name}`)
+          const ErrorMessageObject = {
+            message: `Added ${response.name}`,
+            status: "ok",
+          }
+          setErrorMessage(ErrorMessageObject)
           setTimeout(() => {
             setErrorMessage(null)
           }, 5000)
@@ -82,16 +97,33 @@ const App = () => {
     if(window.confirm(`Delete ${personToDelete.name}?`)){
       personsService
       .borrar(personToDelete.id)
-      .then(
+      .then(response => {
         setPersons(persons.filter(person => person.id !== personToDelete.id))
-      )
+        const ErrorMessageObject = {
+          message: `Information of ${personToDelete.name} has been removed from the server.`,
+          status: "ok",
+        }
+        setErrorMessage(ErrorMessageObject)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)})
+      .catch(error => {
+        const ErrorMessageObject = {
+          message: `Information of ${personToDelete.name} has already been removed from the server.`,
+          status: "nok",
+        }
+        setErrorMessage(ErrorMessageObject)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      })
     }
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={errorMessage} />
+      <Notification ErrorMessage={errorMessage} />
       <Filter value={filter} action={handleFilterChange} />
       <h3>Add a new</h3>
       <PersonForm formAction={addName} name={newName} nameChange={handleNameChange} number={newNumber} numberChange={handleNumberChange} />
