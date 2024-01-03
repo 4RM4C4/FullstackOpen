@@ -1,6 +1,6 @@
 const http = require('http')
 const cors = require('cors')
-require('dotenv').config()
+//require('dotenv').config()
 const express = require('express')
 const app = express()
 const Note = require('./models/note')
