@@ -1,8 +1,9 @@
 const express = require('express')
+//require('dotenv').config()
 var morgan = require('morgan')
 const app = express()
 const cors = require('cors')
-
+const Person = require('./models/person')
 app.use(express.static('dist'))
 app.use(cors())
 app.use(express.json())
@@ -33,7 +34,9 @@ let persons = [
 ]
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
 
 app.get('/info', (request, response) => {
@@ -41,14 +44,9 @@ app.get('/info', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(person => person.id === id)
-    if (person) {
+    Person.findById(request.params.id).then(person => {
         response.json(person)
-    } else {
-        response.statusMessage = "Not Found";
-        response.status(404).send()
-    }
+      })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
