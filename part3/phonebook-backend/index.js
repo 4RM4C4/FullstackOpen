@@ -13,42 +13,31 @@ morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 const errorHandler = (error, request, response, next) => {
+    console.log(JSON.stringify(error))
     console.error(error.message)
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
     }
 
+    if (error.name === 'MongooseError') {
+        return response.status(500).send({ error: 'could not connect to db' })
+    }
+
+    if (error.name === 'NameMissing') {
+        return response.status(400).send({ error: 'name missing' })
+    }
+
+    if (error.name === 'NumberMissing') {
+        return response.status(400).send({ error: 'number missing' })
+    }
+
+    if (error.name === 'NameNotUnique') {
+        return response.status(400).send({ error: 'name must be unique' })
+    }
+
     next(error)
 }
-
-app.use(errorHandler)
-
-
-
-
-let persons = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "number": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "number": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
-    }
-]
 
 app.get('/api/persons', (request, response, next) => {
     Person.find({})
@@ -86,29 +75,33 @@ app.post('/api/persons', (request, response, next) => {
     const body = request.body
 
     if (!body.name) {
-        return response.status(400).json({ error: 'name missing' })
+        return next(error = { name: 'NameMissing' })
     }
 
     if (!body.number) {
-        return response.status(400).json({ error: 'number missing' })
+        return next(error = { name: 'NumberMissing' })
     }
 
-    if (persons.find(element => element.name === body.name)) {
-        return response.status(400).json({ error: 'name must be unique' })
-    }
+    Person.findOne({ name: body.name })
+        .then(result => {
+            if (result) {
+                next(error = { name: 'NameNotUnique' })
+            } else {
+                const person = new Person({
+                    name: body.name,
+                    number: body.number,
+                })
 
-    const person = new Person({
-        name: body.name,
-        number: body.number,
-    })
-
-    person.save()
-        .then(savedPerson => {
-            response.json(savedPerson)
+                person.save()
+                    .then(savedPerson => {
+                        response.json(savedPerson)
+                    })
+                    .catch(error => next(error))
+            }
         })
-        .catch(error => next(error))
 })
 
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
