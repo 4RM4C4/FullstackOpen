@@ -91,7 +91,6 @@ app.post('/api/persons', (request, response, next) => {
                     name: body.name,
                     number: body.number,
                 })
-
                 person.save()
                     .then(savedPerson => {
                         response.json(savedPerson)
@@ -99,6 +98,15 @@ app.post('/api/persons', (request, response, next) => {
                     .catch(error => next(error))
             }
         })
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+    Person.findByIdAndUpdate(request.params.id, {number: body.number}, {returnDocument: 'after'})
+        .then(result => {
+            response.status(200).send(result)
+        })
+        .catch(error => next(error))
 })
 
 app.use(errorHandler)
