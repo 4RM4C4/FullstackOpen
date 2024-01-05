@@ -18,22 +18,16 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
-    }
-
-    if (error.name === 'MongooseError') {
+    } else if (error.name === 'MongooseError') {
         return response.status(500).send({ error: 'could not connect to db' })
-    }
-
-    if (error.name === 'NameMissing') {
+    } else if (error.name === 'NameMissing') {
         return response.status(400).send({ error: 'name missing' })
-    }
-
-    if (error.name === 'NumberMissing') {
+    } else if (error.name === 'NumberMissing') {
         return response.status(400).send({ error: 'number missing' })
-    }
-
-    if (error.name === 'NameNotUnique') {
+    } else if (error.name === 'NameNotUnique') {
         return response.status(400).send({ error: 'name must be unique' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     next(error)
@@ -102,7 +96,7 @@ app.post('/api/persons', (request, response, next) => {
 
 app.put('/api/persons/:id', (request, response, next) => {
     const body = request.body
-    Person.findByIdAndUpdate(request.params.id, {number: body.number}, {returnDocument: 'after'})
+    Person.findByIdAndUpdate(request.params.id, { number: body.number }, { returnDocument: 'after' })
         .then(result => {
             response.status(200).send(result)
         })

@@ -90,6 +90,16 @@ const App = () => {
             setErrorMessage(null)
           }, 5000)
         })
+        .catch(error => {
+          const ErrorMessageObject = {
+            message: `${error.response.data.error}`,
+            status: "nok",
+          }
+          setErrorMessage(ErrorMessageObject)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+        })
     }
   }
 
