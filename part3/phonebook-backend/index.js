@@ -13,7 +13,6 @@ morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 const errorHandler = (error, request, response, next) => {
-    console.log(JSON.stringify(error))
     console.error(error.message)
 
     if (error.name === 'CastError') {
