@@ -1,17 +1,22 @@
-const Notification = ({ ErrorMessage }) => {
+import React from 'react'
+
+function Notification({ ErrorMessage }) {
   if (ErrorMessage === null) {
     return null
-  } else {
-    if (ErrorMessage.status === "ok") {
-      return (<div className="errorok">
+  }
+  if (ErrorMessage.status === 'ok') {
+    return (
+      <div className="errorok">
         {ErrorMessage.message}
-      </div>)
-    }
-    if (ErrorMessage.status === 'nok') {
-      return (<div className="errornok">
+      </div>
+    )
+  }
+  if (ErrorMessage.status === 'nok') {
+    return (
+      <div className="errornok">
         {ErrorMessage.message}
-      </div>)
-    }
+      </div>
+    )
   }
 
   return (

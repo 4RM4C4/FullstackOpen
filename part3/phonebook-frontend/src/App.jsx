@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
-import personsService from './services/persons.js'
+import personsService from './services/persons'
 import Notification from './components/Notification'
 import './index.css'
 
-const App = () => {
+function App() {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
@@ -16,13 +16,13 @@ const App = () => {
   useEffect(() => {
     personsService
       .getAll()
-      .then(response => {
+      .then((response) => {
         setPersons(response)
       })
-      .catch(error =>{
+      .catch(() => {
         const ErrorMessageObject = {
-          message: `Could not retrieve information from the database.`,
-          status: "nok",
+          message: 'Could not retrieve information from the database.',
+          status: 'nok',
         }
         setErrorMessage(ErrorMessageObject)
       })
@@ -46,54 +46,53 @@ const App = () => {
       name: newName,
       number: newNumber,
     }
-    if (persons.some(p => p.name === personObject.name)) {
-      if(persons.some(p => p.number === personObject.number)){
+    if (persons.some((p) => p.name.toLowerCase() === personObject.name.toLowerCase())) {
+      if (persons.some((p) => p.number === personObject.number)) {
         alert(`${newName} with number ${newNumber} is already added to phonebook.`)
         setNewName('')
         setNewNumber('')
         setFilter('')
-      } else {
-        if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
-          const personId = persons.filter(p => p.name == personObject.name)[0].id
-          personsService
-            .update(personId, personObject)
-            .then(response => {
-              setPersons(persons.map(person => person.id !== response.id ? person : response))
-              setNewName('')
-              setNewNumber('')
-              setFilter('')
-              const ErrorMessageObject = {
-                message: `Updated ${response.name} with number ${response.number}`,
-                status: "ok",
-              }
-              setErrorMessage(ErrorMessageObject)
-              setTimeout(() => {
-                setErrorMessage(null)
-              }, 5000)
-            })
-        }
+      } else if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const per = persons.filter((p) => p.name.toLowerCase() === personObject.name.toLowerCase())
+        const personId = per[0].id
+        personsService
+          .update(personId, personObject)
+          .then((response) => {
+            setPersons(persons.map((person) => (person.id !== response.id ? person : response)))
+            setNewName('')
+            setNewNumber('')
+            setFilter('')
+            const ErrorMessageObject = {
+              message: `Updated ${response.name} with number ${response.number}`,
+              status: 'ok',
+            }
+            setErrorMessage(ErrorMessageObject)
+            setTimeout(() => {
+              setErrorMessage(null)
+            }, 5000)
+          })
       }
     } else {
       personsService
         .create(personObject)
-        .then(response => {
+        .then((response) => {
           setPersons(persons.concat(response))
           setNewName('')
           setNewNumber('')
           setFilter('')
           const ErrorMessageObject = {
             message: `Added ${response.name}`,
-            status: "ok",
+            status: 'ok',
           }
           setErrorMessage(ErrorMessageObject)
           setTimeout(() => {
             setErrorMessage(null)
           }, 5000)
         })
-        .catch(error => {
+        .catch((error) => {
           const ErrorMessageObject = {
             message: `${error.response.data.error}`,
-            status: "nok",
+            status: 'nok',
           }
           setErrorMessage(ErrorMessageObject)
           setTimeout(() => {
@@ -104,29 +103,30 @@ const App = () => {
   }
 
   const deleteName = (personToDelete) => {
-    if(window.confirm(`Delete ${personToDelete.name}?`)){
+    if (window.confirm(`Delete ${personToDelete.name}?`)) {
       personsService
-      .borrar(personToDelete.id)
-      .then(response => {
-        setPersons(persons.filter(person => person.id !== personToDelete.id))
-        const ErrorMessageObject = {
-          message: `Information of ${personToDelete.name} has been removed from the server.`,
-          status: "ok",
-        }
-        setErrorMessage(ErrorMessageObject)
-        setTimeout(() => {
-          setErrorMessage(null)
-        }, 5000)})
-      .catch(error => {
-        const ErrorMessageObject = {
-          message: `Information of ${personToDelete.name} has already been removed from the server.`,
-          status: "nok",
-        }
-        setErrorMessage(ErrorMessageObject)
-        setTimeout(() => {
-          setErrorMessage(null)
-        }, 5000)
-      })
+        .borrar(personToDelete.id)
+        .then(() => {
+          setPersons(persons.filter((person) => person.id !== personToDelete.id))
+          const ErrorMessageObject = {
+            message: `Information of ${personToDelete.name} has been removed from the server.`,
+            status: 'ok',
+          }
+          setErrorMessage(ErrorMessageObject)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+        })
+        .catch(() => {
+          const ErrorMessageObject = {
+            message: `Information of ${personToDelete.name} has already been removed from the server.`,
+            status: 'nok',
+          }
+          setErrorMessage(ErrorMessageObject)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
+        })
     }
   }
 
