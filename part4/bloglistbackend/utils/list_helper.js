@@ -24,10 +24,17 @@ const mostBlogs = (blogs) => {
 return retorno
 }
 
+const mostLikes = (blogs) => {
+  const countBlogs = Object.values(_.groupBy(blogs, 'author'))
+  const countLikes = countBlogs.map((value, key) => ({author : value[0].author, likes : value.reduce((sum, current) => sum + current.likes, 0)})).sort((a,b) => a.likes <= b.likes ? 1 : -1)
+return countLikes[0]
+}
+
 
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }
