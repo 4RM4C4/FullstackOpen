@@ -92,6 +92,41 @@ test('post with likes missing set likes value to 0', async () => {
   expect(likes[initialBlogs.length]).toEqual(0)
 })
 
+test('post with title missing is not added', async () => {
+  const newBlog = {
+    "author": "Armaca",
+    "url": "armaca.com.ar",
+    "likes": 121,
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(400)
+
+  const response = (await api.get('/api/blogs')).body
+
+  expect(response).toHaveLength(initialBlogs.length)
+})
+
+test('post with url missing is not added', async () => {
+  const newBlog = {
+    "title": "El oscuro lado de la programación",
+    "author": "Armaca",
+    "likes": 121,
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(400)
+
+  const response = (await api.get('/api/blogs')).body
+
+  expect(response).toHaveLength(initialBlogs.length)
+})
+
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
