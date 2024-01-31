@@ -160,6 +160,124 @@ describe('deletion of a blog', () => {
   }, 100000)
 })
 
+describe('updating of a blog', () => {
+  test('changing the title', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+    const updatedBlog = {
+      "title": "modified title",
+    }
+
+    const response = await api
+      .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .send(updatedBlog)
+      .expect(200)
+
+    const blogsAtEnd = await helper.blogsInDb()
+
+    expect(response.body.title).toEqual("modified title")
+    expect(response.body.author).toEqual(blogsAtStart[0].author)
+    expect(response.body.url).toEqual(blogsAtStart[0].url)
+    expect(response.body.likes).toEqual(blogsAtStart[0].likes)
+    expect(response.body.id).toEqual(blogsAtStart[0].id)
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+    expect(blogsAtEnd[0].title).toEqual("modified title")
+    expect(blogsAtEnd[0].author).toEqual(blogsAtStart[0].author)
+    expect(blogsAtEnd[0].url).toEqual(blogsAtStart[0].url)
+    expect(blogsAtEnd[0].likes).toEqual(blogsAtStart[0].likes)
+    expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
+  }, 100000)
+
+  test('changing the author', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+    const updatedBlog = {
+      "author": "modified author",
+    }
+
+    const response = await api
+      .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .send(updatedBlog)
+      .expect(200)
+
+    const blogsAtEnd = await helper.blogsInDb()
+
+    expect(response.body.title).toEqual(blogsAtStart[0].title)
+    expect(response.body.author).toEqual("modified author")
+    expect(response.body.url).toEqual(blogsAtStart[0].url)
+    expect(response.body.likes).toEqual(blogsAtStart[0].likes)
+    expect(response.body.id).toEqual(blogsAtStart[0].id)
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+    expect(blogsAtEnd[0].title).toEqual(blogsAtStart[0].title)
+    expect(blogsAtEnd[0].author).toEqual("modified author")
+    expect(blogsAtEnd[0].url).toEqual(blogsAtStart[0].url)
+    expect(blogsAtEnd[0].likes).toEqual(blogsAtStart[0].likes)
+    expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
+  }, 100000)
+
+  test('changing the url', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+    const updatedBlog = {
+      "url": "modified.url",
+    }
+
+    const response = await api
+      .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .send(updatedBlog)
+      .expect(200)
+
+    const blogsAtEnd = await helper.blogsInDb()
+
+    expect(response.body.title).toEqual(blogsAtStart[0].title)
+    expect(response.body.author).toEqual(blogsAtStart[0].author)
+    expect(response.body.url).toEqual("modified.url")
+    expect(response.body.likes).toEqual(blogsAtStart[0].likes)
+    expect(response.body.id).toEqual(blogsAtStart[0].id)
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+    expect(blogsAtEnd[0].title).toEqual(blogsAtStart[0].title)
+    expect(blogsAtEnd[0].author).toEqual(blogsAtStart[0].author)
+    expect(blogsAtEnd[0].url).toEqual("modified.url")
+    expect(blogsAtEnd[0].likes).toEqual(blogsAtStart[0].likes)
+    expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
+  }, 100000)
+
+  test('changing the likes', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+    const updatedBlog = {
+      "likes": 35,
+    }
+
+    const response = await api
+      .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .send(updatedBlog)
+      .expect(200)
+
+    const blogsAtEnd = await helper.blogsInDb()
+
+    expect(response.body.title).toEqual(blogsAtStart[0].title)
+    expect(response.body.author).toEqual(blogsAtStart[0].author)
+    expect(response.body.url).toEqual(blogsAtStart[0].url)
+    expect(response.body.likes).toEqual(35)
+    expect(response.body.id).toEqual(blogsAtStart[0].id)
+
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+    expect(blogsAtEnd[0].title).toEqual(blogsAtStart[0].title)
+    expect(blogsAtEnd[0].author).toEqual(blogsAtStart[0].author)
+    expect(blogsAtEnd[0].url).toEqual(blogsAtStart[0].url)
+    expect(blogsAtEnd[0].likes).toEqual(35)
+    expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
+  }, 100000)
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
