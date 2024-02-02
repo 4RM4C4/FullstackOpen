@@ -41,9 +41,11 @@ const initialUsers = [
 ]
 
 const nonExistingId = async () => {
+  const databaseUsers = await usersInDb()
+  
   const blog = new Blog({
     "title": 'willremovethissoon',
-    "author": "Random Author",
+    "author": databaseUsers[0].id,
     "url": "random-url.com",
     "likes": 3,
   })

@@ -15,6 +15,7 @@ const blogSchema = new mongoose.Schema({
         returnedObject.id = returnedObject._id.toString()
         delete returnedObject._id
         delete returnedObject.__v
+        returnedObject.author = returnedObject.author.toString()
       },
     },
   })
