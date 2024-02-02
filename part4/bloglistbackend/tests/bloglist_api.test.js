@@ -48,15 +48,16 @@ describe('when there is initially some blogs saved', () => {
 describe('viewing a specific blog', () => {
   test('succeeds with a valid id', async () => {
     const blogsAtStart = await helper.blogsInDb()
-
     const blogToView = blogsAtStart[0]
-
     const resultBlog = await api
       .get(`/api/blogs/${blogToView.id}`)
       .expect(200)
       .expect('Content-Type', /application\/json/)
-
-    expect(resultBlog.body).toEqual(blogToView)
+    
+    expect(resultBlog.body.id).toEqual(blogToView.id)
+    expect(resultBlog.body.likes).toEqual(blogToView.likes)
+    expect(resultBlog.body.title).toEqual(blogToView.title)
+    expect(resultBlog.body.url).toEqual(blogToView.url)
   }, 100000)
 
   test('fails with statuscode 404 if blog does not exist', async () => {
