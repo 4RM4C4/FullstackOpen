@@ -3,14 +3,31 @@ const supertest = require('supertest')
 const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
+const bcrypt = require('bcrypt')
+const User = require('../models/user')
 const Blog = require('../models/blog')
 
 beforeEach(async () => {
+  await User.deleteMany({})
+  const userObjects = await Promise.all(await helper.initialUsers
+    .map(async user => {
+      user.passwordHash = await bcrypt.hash(user.password, 10)
+      delete user.password
+      return new User(user)
+    }))
+
+  const promiseUserArray = userObjects.map(user => user.save())
+  await Promise.all(promiseUserArray)
+
+
   await Blog.deleteMany({})
   const blogObjects = helper.initialBlogs
     .map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArray)
+  const promiseBlogArray = blogObjects.map((blog, position) => {
+    blog.author = promiseUserArray[position].id
+    return blog.save()
+  })
+  await Promise.all(promiseBlogArray)
 }, 100000)
 
 describe('when there is initially some blogs saved', () => {
@@ -276,6 +293,28 @@ describe('updating of a blog', () => {
     expect(blogsAtEnd[0].likes).toEqual(35)
     expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
   }, 100000)
+})
+
+describe('when there is initially one user in db', () => {
+
+  test('creation succeeds with a fresh username', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      username: 'Armaca',
+      name: 'Ariel',
+      password: 'hackeable',
+    }
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(usersAtStart.length + 1)
+    const usernames = usersAtEnd.map(u => u.username)
+    expect(usernames).toContain(newUser.username)
+  })
 })
 
 afterAll(async () => {
