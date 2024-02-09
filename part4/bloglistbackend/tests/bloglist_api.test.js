@@ -1,11 +1,21 @@
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const config = require('../utils/config');
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const helper = require('./test_helper')
-const app = require('../app')
-const api = supertest(app)
+let app
+let api
+let mongoServer
 const bcrypt = require('bcrypt')
 const User = require('../models/user')
 const Blog = require('../models/blog')
+
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  config.MONGODB_URI = await mongoServer.getUri();
+  app = require('../app');
+  api = supertest(app);
+});
 
 beforeEach(async () => {
   await User.deleteMany({})
@@ -22,9 +32,9 @@ beforeEach(async () => {
   const blogObjects = helper.initialBlogs
     .map(blog => new Blog(blog))
   await Promise.all(blogObjects.map(async (blog, position) => {
-    blog.author = promiseUserArray[position]._id
+    blog.author = promiseUserArray[position].id
     const returnedBlog = await blog.save()
-    promiseUserArray[position].blogs.concat(returnedBlog._id)
+    promiseUserArray[position].blogs.concat(returnedBlog.id)
     promiseUserArray[position].save()
     return returnedBlog
   }))
@@ -79,17 +89,24 @@ describe('viewing a specific blog', () => {
 
 describe('addition of a new blog', () => {
 
-  test('success with valid data', async () => {
+  test('success with valid data and token', async () => {
     const databaseUsers = await helper.usersInDb()
     const newBlog = {
       "title": "El oscuro lado de la programación",
-      "author": databaseUsers[0].id,
       "url": "armaca.com.ar",
       "likes": 121,
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     await api
       .post('/api/blogs')
+      .set({ Authorization: bearer})
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -98,7 +115,7 @@ describe('addition of a new blog', () => {
 
     expect(response.body).toHaveLength(helper.initialBlogs.length + 1)
     expect(response.body[helper.initialBlogs.length].title).toContain("El oscuro lado de la programación")
-    expect(response.body[helper.initialBlogs.length].author).toContain(databaseUsers[0].id)
+    expect(response.body[helper.initialBlogs.length].author.id).toContain(databaseUsers[0].id)
     expect(response.body[helper.initialBlogs.length].url).toContain("armaca.com.ar")
     expect(response.body[helper.initialBlogs.length].likes).toEqual(121)
   }, 100000)
@@ -107,12 +124,19 @@ describe('addition of a new blog', () => {
     const databaseUsers = await helper.usersInDb()
     const newBlog = {
       "title": "El oscuro lado de la programación",
-      "author": databaseUsers[0].id,
       "url": "armaca.com.ar",
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     await api
       .post('/api/blogs')
+      .set({ Authorization: bearer})
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -121,20 +145,27 @@ describe('addition of a new blog', () => {
 
     expect(response.body).toHaveLength(helper.initialBlogs.length + 1)
     expect(response.body[helper.initialBlogs.length].title).toContain("El oscuro lado de la programación")
-    expect(response.body[helper.initialBlogs.length].author).toContain(databaseUsers[0].id)
+    expect(response.body[helper.initialBlogs.length].author.id).toContain(databaseUsers[0].id)
     expect(response.body[helper.initialBlogs.length].url).toContain("armaca.com.ar")
     expect(response.body[helper.initialBlogs.length].likes).toEqual(0)
   }, 100000)
 
   test('with title missing is not added', async () => {
     const newBlog = {
-      "author": "Armaca",
       "url": "armaca.com.ar",
       "likes": 121,
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     await api
       .post('/api/blogs')
+      .set({ Authorization: bearer})
       .send(newBlog)
       .expect(400)
 
@@ -146,18 +177,44 @@ describe('addition of a new blog', () => {
   test('with url missing is not added', async () => {
     const newBlog = {
       "title": "El oscuro lado de la programación",
-      "author": "Armaca",
       "likes": 121,
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     await api
       .post('/api/blogs')
+      .set({ Authorization: bearer})
       .send(newBlog)
       .expect(400)
 
     const response = (await api.get('/api/blogs')).body
 
     expect(response).toHaveLength(helper.initialBlogs.length)
+  }, 100000)
+
+  test('fails without Bearer token', async () => {
+    const databaseUsers = await helper.usersInDb()
+    const newBlog = {
+      "title": "El oscuro lado de la programación",
+      "url": "armaca.com.ar",
+      "likes": 121,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    const response = await api.get('/api/blogs')
+
+    expect(response.body).toHaveLength(helper.initialBlogs.length)
   }, 100000)
 })
 
@@ -166,8 +223,16 @@ describe('deletion of a blog', () => {
     const blogsAtStart = await helper.blogsInDb()
     const blogToDelete = blogsAtStart[0]
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set({ Authorization: bearer})
       .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -190,15 +255,23 @@ describe('updating of a blog', () => {
       "title": "modified title",
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     const response = await api
       .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .set({ Authorization: bearer})
       .send(updatedBlog)
       .expect(200)
 
     const blogsAtEnd = await helper.blogsInDb()
-
+    
     expect(response.body.title).toEqual("modified title")
-    expect(response.body.author).toEqual(blogsAtStart[0].author)
+    expect(response.body.author).toEqual(blogsAtStart[0].author.toString())
     expect(response.body.url).toEqual(blogsAtStart[0].url)
     expect(response.body.likes).toEqual(blogsAtStart[0].likes)
     expect(response.body.id).toEqual(blogsAtStart[0].id)
@@ -206,38 +279,7 @@ describe('updating of a blog', () => {
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
 
     expect(blogsAtEnd[0].title).toEqual("modified title")
-    expect(blogsAtEnd[0].author).toEqual(blogsAtStart[0].author)
-    expect(blogsAtEnd[0].url).toEqual(blogsAtStart[0].url)
-    expect(blogsAtEnd[0].likes).toEqual(blogsAtStart[0].likes)
-    expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
-  }, 100000)
-
-  test('changing the author', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const databaseUsers = await helper.usersInDb()
-
-
-    const updatedBlog = {
-      "author": databaseUsers[2].id,
-    }
-
-    const response = await api
-      .put(`/api/blogs/${blogsAtStart[0].id}`)
-      .send(updatedBlog)
-      .expect(200)
-
-    const blogsAtEnd = await helper.blogsInDb()
-
-    expect(response.body.title).toEqual(blogsAtStart[0].title)
-    expect(response.body.author).toEqual(databaseUsers[2].id)
-    expect(response.body.url).toEqual(blogsAtStart[0].url)
-    expect(response.body.likes).toEqual(blogsAtStart[0].likes)
-    expect(response.body.id).toEqual(blogsAtStart[0].id)
-
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-
-    expect(blogsAtEnd[0].title).toEqual(blogsAtStart[0].title)
-    expect(blogsAtEnd[0].author).toEqual(databaseUsers[2].id)
+    expect(blogsAtEnd[0].author.toString()).toEqual(blogsAtStart[0].author.toString())
     expect(blogsAtEnd[0].url).toEqual(blogsAtStart[0].url)
     expect(blogsAtEnd[0].likes).toEqual(blogsAtStart[0].likes)
     expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
@@ -250,15 +292,23 @@ describe('updating of a blog', () => {
       "url": "modified.url",
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     const response = await api
       .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .set({ Authorization: bearer})
       .send(updatedBlog)
       .expect(200)
 
     const blogsAtEnd = await helper.blogsInDb()
 
     expect(response.body.title).toEqual(blogsAtStart[0].title)
-    expect(response.body.author).toEqual(blogsAtStart[0].author)
+    expect(response.body.author).toEqual(blogsAtStart[0].author.toString())
     expect(response.body.url).toEqual("modified.url")
     expect(response.body.likes).toEqual(blogsAtStart[0].likes)
     expect(response.body.id).toEqual(blogsAtStart[0].id)
@@ -266,7 +316,7 @@ describe('updating of a blog', () => {
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
 
     expect(blogsAtEnd[0].title).toEqual(blogsAtStart[0].title)
-    expect(blogsAtEnd[0].author).toEqual(blogsAtStart[0].author)
+    expect(blogsAtEnd[0].author.toString()).toEqual(blogsAtStart[0].author.toString())
     expect(blogsAtEnd[0].url).toEqual("modified.url")
     expect(blogsAtEnd[0].likes).toEqual(blogsAtStart[0].likes)
     expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
@@ -279,15 +329,23 @@ describe('updating of a blog', () => {
       "likes": 35,
     }
 
+    const login = {
+      "username": helper.initialUsers[0].username,
+      "password": helper.initialUsers[0].password
+    }
+
+    const bearer = 'Bearer '.concat((await api.post('/api/login').send(login)).body.token)
+
     const response = await api
       .put(`/api/blogs/${blogsAtStart[0].id}`)
+      .set({ Authorization: bearer})
       .send(updatedBlog)
       .expect(200)
 
     const blogsAtEnd = await helper.blogsInDb()
 
     expect(response.body.title).toEqual(blogsAtStart[0].title)
-    expect(response.body.author).toEqual(blogsAtStart[0].author)
+    expect(response.body.author).toEqual(blogsAtStart[0].author.toString())
     expect(response.body.url).toEqual(blogsAtStart[0].url)
     expect(response.body.likes).toEqual(35)
     expect(response.body.id).toEqual(blogsAtStart[0].id)
@@ -295,7 +353,7 @@ describe('updating of a blog', () => {
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
 
     expect(blogsAtEnd[0].title).toEqual(blogsAtStart[0].title)
-    expect(blogsAtEnd[0].author).toEqual(blogsAtStart[0].author)
+    expect(blogsAtEnd[0].author.toString()).toEqual(blogsAtStart[0].author.toString())
     expect(blogsAtEnd[0].url).toEqual(blogsAtStart[0].url)
     expect(blogsAtEnd[0].likes).toEqual(35)
     expect(blogsAtEnd[0].id).toEqual(blogsAtStart[0].id)
@@ -362,7 +420,8 @@ describe('when there is initially one user in db', () => {
   })
 })
 
-
 afterAll(async () => {
+  await mongoose.disconnect();
+  await mongoServer.stop();
   await mongoose.connection.close()
-})
+});
