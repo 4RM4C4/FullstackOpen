@@ -6,6 +6,7 @@ const Login = ({ username, password, setUsername, setPassword, handleLogin, user
       Username
           <input
             type="text"
+            autoComplete="username"
             value={username}
             name="Username"
             onChange={({ target }) => setUsername(target.value)}
@@ -15,6 +16,7 @@ const Login = ({ username, password, setUsername, setPassword, handleLogin, user
       Password
           <input
             type="password"
+            autoComplete="current-password"
             value={password}
             name="Password"
             onChange={({ target }) => setPassword(target.value)}
