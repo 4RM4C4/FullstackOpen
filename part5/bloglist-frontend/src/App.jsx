@@ -4,6 +4,8 @@ import blogService from './services/blogs'
 import Login from './components/Login'
 import loginService from './services/login'
 import AddBlog from './components/AddBlog'
+import Notification from './components/Notification'
+import './index.css'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -52,7 +54,11 @@ url: ''})
       setUsername('')
       setPassword('')
     } catch (exception) {
-      setErrorMessage('Wrong credentials')
+      const ErrorMessageObject = {
+        message: `Wrong Username or Password.`,
+        status: "nok",
+      }
+      setErrorMessage(ErrorMessageObject)
       setTimeout(() => {
         setErrorMessage(null)
       }, 5000)
@@ -67,8 +73,16 @@ url: ''})
         blogService.getAll().then(blogs =>
           setBlogs(blogs)
         )
+        const ErrorMessageObject = {
+          message: `A new Blog ${newBlog.title} by ${user.name} added`,
+          status: "ok",
+        }
         setNewBlog({title : '',
         url: ''})
+        setErrorMessage(ErrorMessageObject)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
       })
   }
 
@@ -76,6 +90,7 @@ url: ''})
     return (
       <div>
         <h2>Log in to application</h2>
+        <Notification ErrorMessage={errorMessage}/>
         <Login username={username} password={password} setUsername={setUsername} setPassword={setPassword} handleLogin={handleLogin} user={user} />
       </div>
     )
@@ -84,6 +99,7 @@ url: ''})
   return (
     <div>
       <h2>Blogs</h2>
+      <Notification ErrorMessage={errorMessage} />
       <p style={{display : 'inline-block'}}>{user.name} logged in</p>
       <button onClick={() => {
           setUser(null)
