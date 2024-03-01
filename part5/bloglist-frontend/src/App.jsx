@@ -3,6 +3,7 @@ import Blog from './components/Blog'
 import blogService from './services/blogs'
 import Login from './components/Login'
 import loginService from './services/login'
+import AddBlog from './components/AddBlog'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -10,6 +11,8 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
+  const [newBlog, setNewBlog] = useState({title : '',
+url: ''})
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -25,6 +28,15 @@ const App = () => {
       blogService.setToken(user.token)
     }
   }, [])
+
+  const handleBlogChange = (event) => {
+    const { name, value } = event.target;
+    setNewBlog(prevState=> ({
+      ...prevState,
+      [name]: value
+    }));
+  }
+
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -47,6 +59,19 @@ const App = () => {
     }
   }
 
+  const addBlog = (event) => {
+    event.preventDefault()
+    blogService
+      .create(newBlog)
+      .then(() => {
+        blogService.getAll().then(blogs =>
+          setBlogs(blogs)
+        )
+        setNewBlog({title : '',
+        url: ''})
+      })
+  }
+
   if (user === null) {
     return (
       <div>
@@ -63,6 +88,7 @@ const App = () => {
       <button onClick={() => {
           setUser(null)
           window.localStorage.removeItem('loggedBloglistappUser')}}>Log out</button>
+      <AddBlog addBlog={addBlog} newBlog={newBlog} handleBlogChange={handleBlogChange} user={user}/>
       {blogs.map(blog =>
         <Blog key={blog.id} blog={blog} />
       )}
